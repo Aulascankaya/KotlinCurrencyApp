@@ -9,6 +9,7 @@ import com.ulas.kotlincurrencyapp.databinding.ActivityMainBinding
 import com.ulas.kotlincurrencyapp.model.CryptoModel
 import com.ulas.kotlincurrencyapp.service.CryptoAPI
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -25,6 +26,10 @@ class MainActivity : AppCompatActivity(), RecyclerViewAdapter.Listener {
     private var adapter: RecyclerViewAdapter? = null
     private var compositeDisposable: CompositeDisposable? = null
     private var job: Job? = null
+
+    val exceptionHandler = CoroutineExceptionHandler { coroutineContext, throwable ->
+        println("Error : ${throwable.localizedMessage}")
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,7 +54,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewAdapter.Listener {
             val service = retrofit.create(CryptoAPI::class.java)
             val response = service.getData()
 
-            withContext(Dispatchers.Main) {
+            withContext(Dispatchers.Main + exceptionHandler) {
                 if (response.isSuccessful) {
                     response.body()?.let { cryptoModel ->
                         currencyModels = cryptoModel.data.entries.map { entry ->
